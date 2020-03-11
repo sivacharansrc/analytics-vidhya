@@ -1,7 +1,7 @@
 # https://courses.analyticsvidhya.com/courses/take/creating-time-series-forecast-using-python
 # Practise Problem: https://datahack.analyticsvidhya.com/contest/practice-problem-time-series-2/
 
-### Time Series Analysis
+# Time Series Analysis
 
 # A collection of data points collected in time order is called time series. However, not all data collected with respect to time represents a time series.
 # Some most common time series data:
@@ -14,8 +14,8 @@
 #       Budgetary Analysis
 
 ### COMPONENTS OF A TIME SERIES ###
-## Trend: Trend is a general direction in which something is developing or changing
-## Seasonality: Any predictible change or pattern in time series that recurs or repeats over a specific time period
+# Trend: Trend is a general direction in which something is developing or changing
+# Seasonality: Any predictible change or pattern in time series that recurs or repeats over a specific time period
 
 # Main differences between a regression series and a time series: In a regression, the observations are independent whereas in a timeseries, the
 # observations are dependent. (i.e. when a Seasonality occurs, the observations are actually dependent from the previous observations or time period)
@@ -23,12 +23,12 @@
 # Time Series Forecasting is a technique of predicting future values using historical observations
 
 ##### PRACTISE PROBLEM - TIME SERIES FORECASTING FOR UNICORN INVESTORS ########
-## Problem Statement:
+# Problem Statement:
 # Unicorn Investors wants to make an investment in a new form of transportation - JetRail. JetRail uses Jet propulsion technology to run rails and move people at a high speed!
 # The investment would only make sense, if they can get more than 1 Million monthly users with in next 18 months. In order to help Unicorn Ventures in their decision, you need to
 # forecast the traffic on JetRail for the next 7 months. You are provided with traffic data of JetRail since inception in the test file
 
-## HYPOTHESIS GENERATION
+# HYPOTHESIS GENERATION
 # These are the general assumptions which support the goal of the problem statement. In this case, assumptions to be true in order to achieve 1 million visitors in 18 months
 # Generally, hypothesis should be generated even before we look at the data so that we avoid any bias. The hypothesis should be generated as soon as we have the problem statement
 
@@ -50,7 +50,9 @@ from datetime import datetime
 from pandas import Series
 
 ### Reading the train and test data ###
+
 os.chdir("C:\\Users\\ssoma\\OneDrive - Monsanto\\Migrated from My PC\\Documents\\Analytics\\Time Series Analysis")
+os.chdir("C:\\Users\\sivac\\Documents\\Analytics\\analytics-vidhya\\Time Series Analysis")
 cwd = os.getcwd()
 
 train = pd.read_csv(cwd+"\\input\\train.csv")
@@ -69,8 +71,8 @@ test.shape
 
 train.Datetime.head()
 
-train['Datetime'] = pd.to_datetime(train.Datetime, format = '%d-%m-%Y %H:%M')
-test['Datetime'] = pd.to_datetime(test.Datetime, format = '%d-%m-%Y %H:%M')
+train['Datetime'] = pd.to_datetime(train.Datetime, format='%d-%m-%Y %H:%M')
+test['Datetime'] = pd.to_datetime(test.Datetime, format='%d-%m-%Y %H:%M')
 
 # Let us extract all information from the datetime object
 
@@ -79,16 +81,16 @@ for i in (train, test):
     i['Month'] = i.Datetime.dt.month
     i['Day'] = i.Datetime.dt.day
     i['Hour'] = i.Datetime.dt.hour
-    i['Weekend'] = np.where((i.Datetime.dt.dayofweek == 5) | (i.Datetime.dt.dayofweek == 6),1,0)
+    i['Weekend'] = np.where((i.Datetime.dt.dayofweek == 5) | (i.Datetime.dt.dayofweek == 6), 1, 0)
     i['Day of the week'] = i.Datetime.dt.dayofweek
 
-train.head(100)
+train.head(10)
 
-### Visualizing the time SERIES
+# Visualizing the time SERIES
 
 train.index = train['Datetime']
 ts = train['Count']
-plt.figure(figsize=(16,8))
+plt.figure(figsize=(16, 8))
 plt.plot(ts, label="Count of Passengers")
 plt.title("Passenger Count Overtime")
 plt.xlabel("Time(Year - Month)")
@@ -107,7 +109,7 @@ train.groupby(train.Year).Count.sum().plot.bar()
 
 train.groupby(train.Month).Count.sum().plot.bar()
 
-plt.figure(figsize = (16,8))
+plt.figure(figsize=(16, 8))
 train.groupby(['Year', 'Month']).Count.sum().plot.bar()
 
 # It is important to note that not much can be inferred from the months because, in the year 2012 only 5 month data is available,
@@ -132,7 +134,7 @@ train.groupby('Hour').Count.mean().plot.bar()
 # From the above plot, the peak traffic is at 7 PM, and then the passenger count starts to decline until 5 AM after which
 # there is again a rise in the passenger count until 12 Noon
 
-temp = train.iloc[:,1:3]
+temp = train.iloc[:, 1:3]
 
 # Let us create different set of timeseries:
 # Hourly time series
@@ -152,19 +154,38 @@ monthly = temp.resample('M').mean()
 monthly.head()
 
 
-plt.figure(figsize=(16,8))
-plt.subplot(4,1,1)
+plt.figure(figsize=(16, 8))
+plt.subplot(4, 1, 1)
 hourly.Count.plot(title='Hourly')
-plt.subplot(4,1,2)
+plt.subplot(4, 1, 2)
 daily.Count.plot(title='Daily')
-plt.subplot(4,1,3)
+plt.subplot(4, 1, 3)
 weekly.Count.plot(title='Weekly')
-plt.subplot(4,1,4)
+plt.subplot(4, 1, 4)
 monthly.Count.plot(title='Monthly')
 
 # As we aggregate more and more data, the series becomes more and more stable. For our analysis, we will use the daily timeseries
 train = daily
-test.index=test.Datetime
+test.index = test.Datetime
 test = test.resample('D').mean()
 
+# test.drop('ID', 1).reset_index().head()
 test.head()
+
+# Let us split the train dataset in to train and validation
+
+Train = train.loc['2012-08-25':'2014-06-24']
+Validation = train.loc['2014-06-25':'2014-09-25']
+
+Train.head()
+
+Train.Count.plot(figsize=(16, 8), title="Daily Ridership", label="Train")
+Validation.Count.plot(figsize=(16, 8), title="Daily Ridership", label='Validation')
+plt.xlabel("Datetime")
+plt.ylabel("Count of Passengers")
+plt.legend(loc="best")
+plt.show()
+
+
+# Pushing the updates to git
+! git add .
