@@ -49,34 +49,34 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from pandas import Series
 
-### Reading the train and test data ###
+### Reading the input and test data ###
 
-os.chdir("C:\\Users\\ssoma\\OneDrive - Monsanto\\Migrated from My PC\\Documents\\Analytics\\Time Series Analysis")
+# os.chdir("C:\\Users\\ssoma\\OneDrive - Monsanto\\Migrated from My PC\\Documents\\Analytics\\Time Series Analysis")
 os.chdir("C:\\Users\\sivac\\Documents\\Analytics\\analytics-vidhya\\Time Series Analysis")
 cwd = os.getcwd()
 
-train = pd.read_csv(cwd+"\\input\\train.csv")
+input = pd.read_csv(cwd+"\\input\\train.csv")
 test = pd.read_csv(cwd+"\\input\\test.csv")
 
 ### Exlporing the dataset ###
-train.columns
-train.dtypes
+input.columns
+input.dtypes
 
-train.shape
+input.shape
 test.shape
 
 #### FEATURE EXTRACTION #####
 
 # Let us first change the variable format for the datetime object, and extract all possible information from the date and time
 
-train.Datetime.head()
+input.Datetime.head()
 
-train['Datetime'] = pd.to_datetime(train.Datetime, format='%d-%m-%Y %H:%M')
+input['Datetime'] = pd.to_datetime(input.Datetime, format='%d-%m-%Y %H:%M')
 test['Datetime'] = pd.to_datetime(test.Datetime, format='%d-%m-%Y %H:%M')
 
 # Let us extract all information from the datetime object
 
-for i in (train, test):
+for i in (input, test):
     i['Year'] = i.Datetime.dt.year
     i['Month'] = i.Datetime.dt.month
     i['Day'] = i.Datetime.dt.day
@@ -84,12 +84,12 @@ for i in (train, test):
     i['Weekend'] = np.where((i.Datetime.dt.dayofweek == 5) | (i.Datetime.dt.dayofweek == 6), 1, 0)
     i['Day of the week'] = i.Datetime.dt.dayofweek
 
-train.head(10)
+input.head(10)
 
 # Visualizing the time SERIES
 
-train.index = train['Datetime']
-ts = train['Count']
+input.index = input['Datetime']
+ts = input['Count']
 plt.figure(figsize=(16, 8))
 plt.plot(ts, label="Count of Passengers")
 plt.title("Passenger Count Overtime")
@@ -101,40 +101,44 @@ plt.legend(loc="best")
 # Let us try to validate all our hypothesis
 # Hypothesis 1: Passenger Count increases over years
 
-train.groupby(train.Year).Count.sum().plot.bar()
+input.groupby(input.Year).Count.sum().plot.bar()
 
 # From the picture above, the hypothesis is true (i.e. passenter count grows over period)
 
 # Hypothesis 2: Traffic will be high from May through October (general tourism will be at peak during these months)
 
-train.groupby(train.Month).Count.sum().plot.bar()
+input.groupby(input.Month).Count.sum().plot.bar()
 
 plt.figure(figsize=(16, 8))
-train.groupby(['Year', 'Month']).Count.sum().plot.bar()
+input.groupby(['Year', 'Month']).Count.sum().plot.bar()
 
 # It is important to note that not much can be inferred from the months because, in the year 2012 only 5 month data is available,
 # where as for the year 2014 only 9 month data is available. However, there is a very steady growing trend in the passenger Count
 
 # Hypothesis 3: Traffic on weekdays will be more when compared to that of the weekend (commuting traffic)
 
-train.groupby('Day').Count.sum().plot.bar()
+input.groupby('Day').Count.sum().plot.bar()
 
 # Not much can be inferred from the above plot, however let us see the mean passenger count on weekdays vs weekends
 
-train.groupby('Weekend').Count.mean().plot.bar()
+input.groupby('Weekend').Count.mean().plot.bar()
 
-train.groupby('Day of the week').Count.mean().plot.bar()
+input.groupby('Day of the week').Count.mean().plot.bar()
 
 # The above two plot shows that indeed, more passengers travel on weekdays when compared with weekends
 
 # Hypothesis 4: Traffic during peak hours will be high
 
-train.groupby('Hour').Count.mean().plot.bar()
+input.groupby('Hour').Count.mean().plot.bar()
 
 # From the above plot, the peak traffic is at 7 PM, and then the passenger count starts to decline until 5 AM after which
 # there is again a rise in the passenger count until 12 Noon
 
-temp = train.iloc[:, 1:3]
+temp = input.drop('ID',1)
+temp['Timestamp'] = pd.to_datetime(temp.Datetime, format='%d-%m-%Y %H:%M')
+temp.index = temp.Timestamp
+
+
 
 # Let us create different set of timeseries:
 # Hourly time series
@@ -165,22 +169,27 @@ plt.subplot(4, 1, 4)
 monthly.Count.plot(title='Monthly')
 
 # As we aggregate more and more data, the series becomes more and more stable. For our analysis, we will use the daily timeseries
-train = daily
-test.index = test.Datetime
+
+test['Timestamp'] = pd.to_datetime(test['Datetime'], format='%d-%m-%Y %H:%M')
+test.head()
+test.index = test.Timestamp
+test.head()
 test = test.resample('D').mean()
 
 # test.drop('ID', 1).reset_index().head()
 test.head()
 
-# Let us split the train dataset in to train and validation
+# Let us use the daily data for our forecasting purpose
 
-Train = train.loc['2012-08-25':'2014-06-24']
-Validation = train.loc['2014-06-25':'2014-09-25']
+# Let us split the input dataset in to input and validation
 
-Train.head()
+train = daily.loc['2012-08-25':'2014-06-24']
+validation = daily.loc['2014-06-25':'2014-09-25']
 
-Train.Count.plot(figsize=(16, 8), title="Daily Ridership", label="Train")
-Validation.Count.plot(figsize=(16, 8), title="Daily Ridership", label='Validation')
+train.head()
+
+train.Count.plot(figsize=(16, 8), title="Daily Ridership", label="input")
+validation.Count.plot(figsize=(16, 8), title="Daily Ridership", label='validation')
 plt.xlabel("Datetime")
 plt.ylabel("Count of Passengers")
 plt.legend(loc="best")
@@ -189,3 +198,5 @@ plt.show()
 
 # Pushing the updates to git
 ! git add .
+! git commit - am "Split data to inputing and validation"
+! git push
