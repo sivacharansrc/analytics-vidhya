@@ -195,8 +195,56 @@ plt.ylabel("Count of Passengers")
 plt.legend(loc="best")
 plt.show()
 
+## Let us discuss various approaches for forecasting time series
+
+# 1. MOVING AVERAGE:
+#       Here the predictions are made by taking the average of the last few points. Let us calculate the moving avearge by taking the
+#   last 60 observations (basically 2 months of data)
+
+validation_copy = validation.copy()
+validation_copy['moving_average_60'] = train.Count.rolling(60).mean().iloc[-1] # Calculating the rolling average using last 60 observations
+
+plt.figure(figsize=(16,8))
+plt.plot(train.Count, label = "train")
+plt.plot(validation.Count, label = "validation")
+plt.plot(validation_copy.moving_average, label="moving average 60")
+plt.legend(loc="best")
+plt.show()
+
+# Calculating Error Metrics
+
+from sklearn.metrics import mean_squared_error
+rms = np.sqrt(mean_squared_error(validation.Count, validation_copy.moving_average_60))
+print(rms)
+
+# Let us try to take average of different set of observations and try to observe the Error
+validation_copy['moving_average_50'] = train.Count.rolling(50).mean().iloc[-1]
+validation_copy['moving_average_40'] = train.Count.rolling(40).mean().iloc[-1]
+validation_copy['moving_average_30'] = train.Count.rolling(30).mean().iloc[-1]
+validation_copy['moving_average_20'] = train.Count.rolling(20).mean().iloc[-1]
+
+rms = np.sqrt(mean_squared_error(validation.Count, validation_copy.moving_average_50))
+print(rms)
+rms = np.sqrt(mean_squared_error(validation.Count, validation_copy.moving_average_40))
+print(rms)
+rms = np.sqrt(mean_squared_error(validation.Count, validation_copy.moving_average_30))
+print(rms)
+rms = np.sqrt(mean_squared_error(validation.Count, validation_copy.moving_average_20))
+print(rms)
+
+# There seems to be an increase in error as the number of observation increases after 30 data points
+
+
+
+
+
+
+
+
+
+
 
 # Pushing the updates to git
 ! git add .
-! git commit - am "Split data to inputing and validation"
+! git commit -am "updated moving average"
 ! git push
