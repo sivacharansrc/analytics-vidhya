@@ -207,7 +207,7 @@ validation_copy['moving_average_60'] = train.Count.rolling(60).mean().iloc[-1] #
 plt.figure(figsize=(16,8))
 plt.plot(train.Count, label = "train")
 plt.plot(validation.Count, label = "validation")
-plt.plot(validation_copy.moving_average, label="moving average 60")
+plt.plot(validation_copy.moving_average_60, label="moving average 60")
 plt.legend(loc="best")
 plt.show()
 
@@ -234,11 +234,81 @@ print(rms)
 
 # There seems to be an increase in error as the number of observation increases after 30 data points
 
+# 2. SIMPLE EXPONENTIAL SMOOTHING
+#       In this technique, we assign larger weights to more recent observationn that to observations from the distant past.
+#   The weights decrease exponentially as observations come from further in the past, the smallest weights are associated with the oldest
+#   observations. Note: If we give entire weight to the last observation, it becomes a naive forecast
 
 
+from statsmodels.tsa.api import ExponentialSmoothing, SimpleExpSmoothing, Holt
+
+fit2 = SimpleExpSmoothing(np.asarray(train.Count)).fit(smoothing_level=0.6, optimized=False)
+validation_copy['SES'] = fit2.forecast(validation.shape[0])
+
+# Plotting Chart to visualize the forecasts
+plt.figure(figsize=(16,8))
+plt.plot(train.Count, label = "train")
+plt.plot(validation.Count, label = "validation")
+plt.plot(validation_copy.moving_average_30, label="moving average 30")
+plt.plot(validation_copy.SES, label="simple exponential smoothing")
+plt.legend(loc="best")
+plt.show()
+
+# Computing the error using RMSE
+rms = np.sqrt(mean_squared_error(validation.Count, validation_copy.SES))
+print(rms)
+
+# All of the previous models forecasted adding some components to average, and hence the forecasts were more or less a straight line
+# We can see other class of models that can forecast the trend, and also capture seasonality etc.
+
+# HOLT's LINEAR TREND MODEL
+#       This is an extension of SES to allow forecasting of data with a trend. This method takes in to account the trend of the dataset.
+#   The forecast function in this method is a function of level and trend
+#   First, let us decompose the series in to four parts:
+#       Observed - The original time series
+#       Trend - Increasing or the decreasing behavior in the time series
+#       Seasonality - The cyclic recurrence of patterns in the time series
+#       Residual - Obtained by removing trend, and seasonality from the time series. These are basically the irregular patterns that
+#                   do not follow a specific pattern
+
+import statsmodels.api as sm
+sm.tsa.seasonal_decompose(train.Count).plot()
+result = sm.tsa.stattools.adfuller(train.Count) # Not sure what this is doing
+plt.show()
+
+# From the above image, an increasing trend can be observed. We can not configure the model accordingly:
+fit1 = Holt(np.asarray(train.Count)).fit(smoothing_level=0.3, smoothing_slope=0.1)
+validation_copy['holt_linear'] = fit1.forecast(validation.shape[0])
+
+# Lets visualize the forecast:
+plt.figure(figsize=(16,8))
+plt.plot(train.Count, label = "train")
+plt.plot(validation.Count, label = "validation")
+plt.plot(validation_copy.moving_average_30, label="moving average 30")
+plt.plot(validation_copy.SES, label="simple exponential smoothing")
+plt.plot(validation_copy.holt_linear, label="holt linear model")
+plt.legend(loc="best")
+plt.show()
+
+# We can see the forecasts are moving up as the model is considering the trend of the dataset
+# Let us compute the error:
+
+rms = np.sqrt(mean_squared_error(validation_copy.Count, validation_copy.holt_linear))
+rms
+
+# We can see that the error rate has further decreased than the exponential smoothing method
+# Let us now use this model to predict values for the test data set
+
+predictions = fit1.forecast(test.shape[0])
+test['predictions'] = predictions
+
+# Converting daily data to hourly data
+
+input['ratio'] = input.Count / input.Count.sum()
+grouped_ratio = input.groupby(['Hour']).ratio.sum()
 
 
-
+#
 
 
 
