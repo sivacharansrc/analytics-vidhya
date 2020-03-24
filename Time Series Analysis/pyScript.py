@@ -174,10 +174,10 @@ test['Timestamp'] = pd.to_datetime(test['Datetime'], format='%d-%m-%Y %H:%M')
 test.head()
 test.index = test.Timestamp
 test.head()
-test = test.resample('D').mean()
+test_daily = test.resample('D').mean()
 
 # test.drop('ID', 1).reset_index().head()
-test.head()
+test_daily.head()
 
 # Let us use the daily data for our forecasting purpose
 
@@ -300,15 +300,40 @@ rms
 # Let us now use this model to predict values for the test data set
 
 predictions = fit1.forecast(test.shape[0])
-test['predictions'] = predictions
+test_daily['predictions'] = predictions
 
 # Converting daily data to hourly data
 
 input['ratio'] = input.Count / input.Count.sum()
 grouped_ratio = input.groupby(['Hour']).ratio.sum()
 
+grouped_ratio = pd.DataFrame(grouped_ratio, columns=['ratio'])
+grouped_ratio.to_csv('grouped_ratio.csv')
 
-#
+test.columns
+test.shape
+
+
+test_daily.columns
+test_daily.shape
+
+test_final = pd.merge(test, test_daily, on=('Day', 'Month', 'Year'), how='left')
+test_final.head()
+
+test_final = test_final[['ID_x', 'Datetime', 'Hour_x', 'predictions']]
+test_final.columns
+test_final = pd.merge(test_final, grouped_ratio, how='left', left_on='Hour_x', right_on = 'Hour')
+test_final.columns
+
+test_final['Count'] = test_final['predictions'] * test_final['ratio']*24 #Multiplying by 24 since we found the mean for daily, and then converting back to count
+test_final['ID'] = test_final['ID_x']
+submission_file = test_final[['ID', 'Count']].copy()
+submission_file.to_csv('first_draft_submission.csv')
+
+# The submitted model gives an rmse of 290, and the first rank is 132
+
+
+
 
 
 
