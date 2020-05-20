@@ -90,12 +90,14 @@ input.head(10)
 
 input.index = input['Datetime']
 ts = input['Count']
+
 plt.figure(figsize=(16, 8))
 plt.plot(ts, label="Count of Passengers")
 plt.title("Passenger Count Overtime")
 plt.xlabel("Time(Year - Month)")
 plt.ylabel("Passenger Count")
 plt.legend(loc="best")
+plt.show()
 
 ### EXPLORATORY ANALYSIS ####
 # Let us try to validate all our hypothesis
@@ -341,5 +343,5 @@ submission_file.to_csv('first_draft_submission.csv')
 
 # Pushing the updates to git
 ! git add .
-! git commit -am "updated moving average"
+! git commit -am "uploaded the first draft submission"
 ! git push
